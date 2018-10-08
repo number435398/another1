@@ -48,7 +48,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Litecoin cannot be compiled without assertions."
+# error "Noodlyappendagecoin cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001
@@ -238,7 +238,7 @@ CTxMemPool mempool(&feeEstimator);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const std::string strMessageMagic = "Litecoin Signed Message:\n";
+const std::string strMessageMagic = "Noodlyappendagecoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1142,16 +1142,52 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     return true;
 }
 
+static const u_int64 TOTAL_GENERATION = MAX_MONEY;
+static const double FSM_FUNDS = 0.03;
+u_int64 nSubsidy = 10000 * COIN;
+
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+
+    if(nHeight == 1)
+    {
+	nSubsidy = TOTAL_GENERATION * FSM_FUNDS;
+//	return nSubsidy + nFees;
+        return nSubsidy;
+    }
+    
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    CAmount nSubsidy = 10000 * COIN;
+    
+    int day = nHeight / 1440 + 1;
+    if(day % 7 == 0)
+    {
+    nSubsidy *=3;
+    }
+    else if(day == 1)
+    {
+    nSubsidy *= 5;
+    }
+    else if(day == 2)
+    {
+    nSubsidy *= 4;
+    }
+    else if(day == 3)
+    {
+    nSubsidy *= 3;
+    }
+    else if(day == 4)
+    {
+    nSubsidy *= 2;
+    }
+    //CAmount nSubsidy = 50 * COIN;
+    //CAmount nSubsidy = 10000 * COIN;
+    
+    nSubsidy >>= (nHeight / 525600);
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+
+
     return nSubsidy;
 }
 
@@ -1683,7 +1719,7 @@ static bool WriteTxIndexDataForBlock(const CBlock& block, CValidationState& stat
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("litecoin-scriptch");
+    RenameThread("noodlyappendagecoin-scriptch");
     scriptcheckqueue.Thread();
 }
 
@@ -3131,6 +3167,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     const Consensus::Params& consensusParams = params.GetConsensus();
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+        
+        
+        
 
     // Check against checkpoints
     if (fCheckpointsEnabled) {
